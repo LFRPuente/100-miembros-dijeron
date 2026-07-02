@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>100 Miembros Dijeron | Control</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="control">
+  <main class="control-shell">
+    <header class="topbar control-topbar">
+      <div>
+        <p class="eyebrow">Panel de juego</p>
+        <h1>100 Miembros Dijeron</h1>
+      </div>
+      <nav class="page-actions" aria-label="Paginas">
+        <a class="ghost-button" href="./index.html">Tablero</a>
+      </nav>
+    </header>
+
+    <section class="editor-band" aria-label="Datos de la ronda">
+      <label class="field">
+        <span>Ronda</span>
+        <input id="roundInput" type="text" autocomplete="off">
+      </label>
+      <label class="field wide-field">
+        <span>Pregunta</span>
+        <input id="questionInput" type="text" autocomplete="off">
+      </label>
+      <div class="strike-control" aria-label="Fallas">
+        <span>Fallas</span>
+        <div class="stepper">
+          <button type="button" id="strikeDown" aria-label="Quitar falla">-</button>
+          <strong id="strikeCount">0</strong>
+          <button type="button" id="strikeUp" aria-label="Agregar falla">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="preset-band" aria-label="Preguntas predeterminadas">
+      <label class="field preset-field">
+        <span>Pregunta predeterminada</span>
+        <select id="presetSelect"></select>
+      </label>
+      <button class="primary-button" type="button" id="loadPreset">Cargar</button>
+    </section>
+
+    <section class="answer-editor" aria-label="Editor de respuestas">
+      <div class="editor-head">
+        <span>Orden</span>
+        <span>Respuesta</span>
+        <span>Puntos</span>
+        <span>Estado</span>
+      </div>
+      <div id="answerEditor"></div>
+      <div class="editor-actions">
+        <button class="primary-button" type="button" id="addAnswer">Agregar</button>
+        <button class="plain-button" type="button" id="hideAll">Cerrar todo</button>
+        <button class="plain-button danger" type="button" id="resetRound">Reiniciar ronda</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
