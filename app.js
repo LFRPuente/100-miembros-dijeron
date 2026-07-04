@@ -3,7 +3,7 @@
 
   var STORAGE_KEY = "cien_mex_game_state_v1";
   var CHANNEL_NAME = "cien_mex_live_board";
-  var PRESET_VERSION = 3;
+  var PRESET_VERSION = 4;
   var LEGACY_DEFAULT_QUESTION = "Nombra algo que encuentras en una fiesta mexicana";
   var ANNIVERSARY_QUESTION = "¿Qué aniversario se celebra?";
   var CHOICE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -35,8 +35,21 @@
       ]
     },
     {
-      label: "Aniversario correcto",
+      label: "Aprovechar una reunión",
       round: "Pregunta 4",
+      question: "Menciona algo que necesitas para aprovechar mejor una reunión o Congreso",
+      answers: [
+        { text: "Escuchar", points: 30 },
+        { text: "Tener la mente abierta", points: 25 },
+        { text: "Poner atención", points: 20 },
+        { text: "Participar", points: 15 },
+        { text: "Tener disposición", points: 6 },
+        { text: "Llegar a tiempo", points: 4 }
+      ]
+    },
+    {
+      label: "Aniversario correcto",
+      round: "Pregunta 5",
       question: "¿Qué aniversario se celebra?",
       answers: [
         { text: "36", points: 0 },
@@ -46,7 +59,7 @@
     },
     {
       label: "Materiales del comité central",
-      round: "Pregunta 5",
+      round: "Pregunta 6",
       question: "Menciona algo que el comité central proporciona o envía a las áreas para realizar el congreso",
       answers: [
         { text: "Programa", points: 50 },

@@ -282,25 +282,10 @@ body[data-page="board"].is-striking .stage-shell {
   transform: rotate(13deg) translateX(115%);
 }
 
-.strike-overlay span,
 .strike-overlay strong {
   position: absolute;
   line-height: 1;
   text-transform: uppercase;
-}
-
-.strike-overlay span {
-  z-index: 3;
-  margin-top: min(31vh, 250px);
-  color: #fff5df;
-  font-size: clamp(2.4rem, 8vw, 7.8rem);
-  font-weight: 900;
-  letter-spacing: 0;
-  text-shadow:
-    0 4px 0 rgba(80, 0, 0, 0.72),
-    0 0 28px rgba(255, 255, 255, 0.42);
-  opacity: 0;
-  transform: translateY(22px) scale(0.9);
 }
 
 .strike-overlay strong {
@@ -337,10 +322,6 @@ body[data-page="board"].is-striking .stage-shell {
 
 .strike-overlay.is-active strong {
   animation: strikeXBlast 1900ms cubic-bezier(0.18, 0.9, 0.2, 1.08) both;
-}
-
-.strike-overlay.is-active span {
-  animation: strikeWordHit 1900ms ease-out both;
 }
 
 .answer-board {
@@ -1086,25 +1067,6 @@ select:focus {
   100% {
     opacity: 0;
     transform: scale(1.18) rotate(0deg);
-  }
-}
-
-@keyframes strikeWordHit {
-  0%,
-  16% {
-    opacity: 0;
-    transform: translateY(22px) scale(0.86);
-  }
-
-  28%,
-  64% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(-8px) scale(1.04);
   }
 }
 
