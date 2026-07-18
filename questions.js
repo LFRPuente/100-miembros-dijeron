@@ -27,9 +27,6 @@
   var cancelButton = document.getElementById("cancelQuestion");
   var saveButton = document.getElementById("saveQuestion");
   var newButton = document.getElementById("newQuestion");
-  var exportButton = document.getElementById("exportQuestions");
-  var importButton = document.getElementById("importQuestions");
-  var importFile = document.getElementById("importFile");
 
   function uid() {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
@@ -47,8 +44,6 @@
     busy = nextBusy;
     saveButton.disabled = busy || !window.QuestionBank.isConfigured();
     newButton.disabled = busy;
-    exportButton.disabled = busy || !window.QuestionBank.isConfigured();
-    importButton.disabled = busy || !window.QuestionBank.isConfigured();
     addAnswerButton.disabled = busy;
   }
 
@@ -107,7 +102,7 @@
   function updateModeHelp() {
     answerHelp.textContent = modeInput.value === "choice"
       ? "Las opciones incorrectas llevan 0 puntos; asigna puntos a la correcta."
-      : "Los puntos se suman al abrir cada respuesta.";
+      : "Para respuesta directa agrega una sola; para encuesta agrega varias con sus puntos.";
   }
 
   function moveAnswer(from, to) {
@@ -284,7 +279,7 @@
 
       var mode = document.createElement("span");
       mode.className = "bank-mode";
-      mode.textContent = item.mode === "choice" ? "Opción múltiple" : "Encuesta";
+      mode.textContent = item.mode === "choice" ? "Opción múltiple" : "Respuestas con puntos";
       heading.append(titleWrap, mode);
 
       var meta = document.createElement("p");
@@ -437,66 +432,6 @@
     window.location.href = "./control.html";
   }
 
-  async function exportQuestions() {
-    if (busy) {
-      return;
-    }
-    setBusy(true);
-    setStatus("Preparando respaldo…");
-    try {
-      var data = await window.QuestionBank.exportAll();
-      var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      var url = URL.createObjectURL(blob);
-      var link = document.createElement("a");
-      link.href = url;
-      link.download = "100-miembros-preguntas-" + new Date().toISOString().slice(0, 10) + ".json";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setStatus("Respaldo exportado correctamente.", "success");
-    } catch (error) {
-      setStatus(error.message, "error");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function importQuestions(file) {
-    if (!file || busy) {
-      return;
-    }
-
-    setBusy(true);
-    setStatus("Leyendo respaldo…");
-    try {
-      var data = JSON.parse(await file.text());
-      var questions = Array.isArray(data) ? data : data.questions;
-      if (!Array.isArray(questions) || questions.length === 0) {
-        throw new Error("El archivo no contiene preguntas válidas.");
-      }
-      if (!window.confirm("Se agregarán " + questions.length + " preguntas al banco. ¿Deseas continuar?")) {
-        return;
-      }
-
-      var imported = 0;
-      for (var i = 0; i < questions.length; i += 1) {
-        var validation = window.QuestionBank.validate(questions[i]);
-        if (validation.errors.length === 0) {
-          await window.QuestionBank.create(validation.value);
-          imported += 1;
-        }
-      }
-      setStatus(imported + " preguntas importadas.", "success");
-      await refresh({ quiet: true });
-    } catch (error) {
-      setStatus(error.message, "error");
-    } finally {
-      importFile.value = "";
-      setBusy(false);
-    }
-  }
-
   searchInput.addEventListener("input", renderList);
   showArchivedInput.addEventListener("change", renderList);
   modeInput.addEventListener("change", updateModeHelp);
@@ -509,13 +444,6 @@
   newButton.addEventListener("click", function () {
     resetForm();
     labelInput.focus();
-  });
-  exportButton.addEventListener("click", exportQuestions);
-  importButton.addEventListener("click", function () {
-    importFile.click();
-  });
-  importFile.addEventListener("change", function () {
-    importQuestions(importFile.files && importFile.files[0]);
   });
 
   resetForm();

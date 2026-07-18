@@ -6,7 +6,7 @@ Juego web estático con tablero, panel de control y banco compartido de pregunta
 
 - `index.html`: tablero para proyectar.
 - `control.html`: control de la ronda activa.
-- `questions.html`: crear, editar, archivar, importar y exportar preguntas.
+- `questions.html`: crear, editar y archivar preguntas compartidas.
 
 ## Conectar Supabase Free
 
@@ -33,8 +33,5 @@ publicable está diseñada para código de navegador y el acceso se limita con R
 - Cada creación, edición, archivado o restauración genera una copia inmutable en
   `public.question_versions`.
 - El rol público no tiene permiso de `DELETE`; archivar nunca borra el historial.
-- El banco puede exportarse como JSON desde la interfaz para mantener respaldos
-  fuera de Supabase.
-
 El acceso es público por requisito: cualquier persona con el enlace puede crear,
 editar o archivar preguntas.

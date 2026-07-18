@@ -28,6 +28,37 @@
       <p class="bank-status" id="bankStatus" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="question-type-guide" aria-labelledby="questionTypeTitle">
+      <div class="question-type-heading">
+        <p class="eyebrow">Tipos de preguntas</p>
+        <h2 id="questionTypeTitle">¿Qué preguntas puedes agregar?</h2>
+        <p>El juego original ya usa estos tres formatos. Elige el que mejor se adapte a tu ronda.</p>
+      </div>
+      <div class="question-type-grid">
+        <article>
+          <span class="question-type-number">1</span>
+          <h3>Respuesta directa</h3>
+          <p>Una sola respuesta, normalmente con 100 puntos.</p>
+          <small>Ejemplo: “Completa la oración: Unidos en…”</small>
+          <strong>Usa: Respuestas con puntos</strong>
+        </article>
+        <article>
+          <span class="question-type-number">2</span>
+          <h3>Encuesta con puntos</h3>
+          <p>Varias respuestas ordenadas por popularidad, cada una con sus puntos.</p>
+          <small>Ejemplo: “Menciona algo que haces al llegar a un congreso”.</small>
+          <strong>Usa: Respuestas con puntos</strong>
+        </article>
+        <article>
+          <span class="question-type-number">3</span>
+          <h3>Opción múltiple</h3>
+          <p>Varias opciones y una correcta. Pon 0 a las incorrectas y puntos a la correcta.</p>
+          <small>Ejemplo: “¿Qué aniversario se celebra?”</small>
+          <strong>Usa: Opción múltiple</strong>
+        </article>
+      </div>
+    </section>
+
     <section class="bank-toolbar" aria-label="Herramientas del banco">
       <label class="field bank-search">
         <span>Buscar</span>
@@ -38,10 +69,7 @@
         <span>Mostrar archivadas</span>
       </label>
       <div class="bank-toolbar-actions">
-        <button class="plain-button" type="button" id="importQuestions">Importar JSON</button>
-        <button class="plain-button" type="button" id="exportQuestions">Exportar respaldo</button>
         <button class="primary-button" type="button" id="newQuestion">Nueva pregunta</button>
-        <input id="importFile" type="file" accept=".json,application/json" hidden>
       </div>
     </section>
 
@@ -81,8 +109,8 @@
             <label class="field bank-type-field">
               <span>Tipo</span>
               <select id="bankMode">
-                <option value="survey">Encuesta con puntos</option>
-                <option value="choice">Opción múltiple</option>
+                <option value="survey">Respuestas con puntos</option>
+                <option value="choice">Opción múltiple (una correcta)</option>
               </select>
             </label>
           </div>
@@ -95,7 +123,7 @@
           <div class="bank-answer-heading">
             <div>
               <span>Respuestas</span>
-              <small id="answerHelp">Los puntos se suman al abrir cada respuesta.</small>
+              <small id="answerHelp">Agrega una respuesta directa o varias respuestas con puntos.</small>
             </div>
             <button class="plain-button" type="button" id="addBankAnswer">Agregar respuesta</button>
           </div>

@@ -90,13 +90,6 @@ async function run() {
   const archived = await bank.setArchived("q1", true, 1);
   assert.equal(archived.archived, true);
 
-  queueResponse([listed[0]]);
-  queueResponse([{ id: 1, question_id: "q1", action: "create", snapshot: listed[0] }]);
-  const backup = await bank.exportAll();
-  assert.equal(backup.format, "100-miembros-question-bank");
-  assert.equal(backup.questions.length, 1);
-  assert.equal(backup.history.length, 1);
-
   console.log("question-bank tests: ok");
 }
 

@@ -196,25 +196,12 @@
     return data[0];
   }
 
-  async function exportAll() {
-    var questions = await list({ archived: "all" });
-    var history = await request("question_versions?select=id,question_id,action,snapshot,created_at&order=created_at.asc");
-    return {
-      format: "100-miembros-question-bank",
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      questions: questions,
-      history: Array.isArray(history) ? history : []
-    };
-  }
-
   global.QuestionBank = Object.freeze({
     isConfigured: isConfigured,
     validate: validateQuestion,
     list: list,
     create: create,
     update: update,
-    setArchived: setArchived,
-    exportAll: exportAll
+    setArchived: setArchived
   });
 })(window);
