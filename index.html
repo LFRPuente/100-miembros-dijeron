@@ -14,6 +14,10 @@
         <h1>100 Miembros Dijeron</h1>
       </div>
       <nav class="page-actions" aria-label="Paginas">
+        <button class="surprise-button" type="button" id="surpriseButton">
+          <span aria-hidden="true">♥</span>
+          Sorpresa
+        </button>
         <a class="ghost-button" href="./control.html">Control</a>
       </nav>
     </header>
@@ -35,6 +39,21 @@
 
   <div class="strike-overlay" id="strikeOverlay" aria-hidden="true">
     <strong>X</strong>
+  </div>
+
+  <div class="surprise-overlay" id="surpriseOverlay" aria-hidden="true" hidden>
+    <section class="surprise-card" role="dialog" aria-modal="true" aria-labelledby="surpriseTitle">
+      <button class="surprise-close" type="button" id="surpriseClose" aria-label="Cerrar sorpresa">&times;</button>
+      <div class="surprise-art">
+        <img src="./assets/pug-enamorado.png" alt="Pug enamorado sosteniendo un corazón" width="1024" height="1024">
+      </div>
+      <div class="surprise-message">
+        <p>Una sorpresa para ustedes</p>
+        <h2 id="surpriseTitle">Te amo mucho <span>mi vidas hermosas</span></h2>
+        <div class="surprise-hearts" aria-hidden="true">♥ ♥ ♥</div>
+        <button class="surprise-dismiss" type="button" id="surpriseDismiss">Cerrar con amor</button>
+      </div>
+    </section>
   </div>
 
   <script src="./app.js"></script>

@@ -754,6 +754,57 @@
     resetRoundButton.addEventListener("click", resetRound);
   }
 
+  function bindSurpriseEvents() {
+    var trigger = document.getElementById("surpriseButton");
+    var overlay = document.getElementById("surpriseOverlay");
+    var closeButton = document.getElementById("surpriseClose");
+    var dismissButton = document.getElementById("surpriseDismiss");
+    var previousActiveElement = null;
+    var closeTimer = null;
+
+    if (!trigger || !overlay || !closeButton || !dismissButton) {
+      return;
+    }
+
+    function openSurprise() {
+      window.clearTimeout(closeTimer);
+      previousActiveElement = document.activeElement;
+      overlay.hidden = false;
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.classList.add("is-surprise-open");
+      window.requestAnimationFrame(function () {
+        overlay.classList.add("is-open");
+        closeButton.focus();
+      });
+    }
+
+    function closeSurprise() {
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("is-surprise-open");
+      closeTimer = window.setTimeout(function () {
+        overlay.hidden = true;
+        if (previousActiveElement && typeof previousActiveElement.focus === "function") {
+          previousActiveElement.focus();
+        }
+      }, 260);
+    }
+
+    trigger.addEventListener("click", openSurprise);
+    closeButton.addEventListener("click", closeSurprise);
+    dismissButton.addEventListener("click", closeSurprise);
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeSurprise();
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && overlay.classList.contains("is-open")) {
+        closeSurprise();
+      }
+    });
+  }
+
   function playAudioAsset(src, volume, fallback) {
     try {
       var audio = new Audio(src);
@@ -844,6 +895,10 @@
 
   if (page === "control") {
     bindControlEvents();
+  }
+
+  if (page === "board") {
+    bindSurpriseEvents();
   }
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
