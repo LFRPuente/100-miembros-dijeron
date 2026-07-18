@@ -406,7 +406,7 @@
 
   function useQuestion(item) {
     var gameState = {
-      presetVersion: 4,
+      presetVersion: 5,
       bankQuestionId: item.id,
       round: item.round,
       question: item.question,

@@ -3,69 +3,62 @@
 
   var STORAGE_KEY = "cien_mex_game_state_v1";
   var CHANNEL_NAME = "cien_mex_live_board";
-  var PRESET_VERSION = 4;
+  var PRESET_VERSION = 5;
   var LEGACY_DEFAULT_QUESTION = "Nombra algo que encuentras en una fiesta mexicana";
-  var ANNIVERSARY_QUESTION = "¿Qué aniversario se celebra?";
   var CHOICE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   var PRESET_ROUNDS = [
     {
-      label: "Acontecimiento del CNS",
+      label: "Fecha de establecimiento de la OSG",
       round: "Pregunta 1",
-      question: "¿Qué acontecimiento se celebra mediante el Congreso Nacional Simultáneo?",
-      answers: [
-        { text: "El aniversario de la OSG", points: 100 }
-      ]
-    },
-    {
-      label: "Unidos en...",
-      round: "Pregunta 2",
-      question: "Completa la oración: \"Unidos en...\"",
-      answers: [
-        { text: "Pensamiento y acción", points: 100 }
-      ]
-    },
-    {
-      label: "Al llegar a un congreso",
-      round: "Pregunta 3",
-      question: "Menciona algo que una persona hace al llegar a un congreso o seminario",
-      answers: [
-        { text: "Registrarse", points: 50 },
-        { text: "Saludar", points: 30 },
-        { text: "Buscar su lugar", points: 20 }
-      ]
-    },
-    {
-      label: "Aprovechar una reunión",
-      round: "Pregunta 4",
-      question: "Menciona algo que necesitas para aprovechar mejor una reunión o Congreso",
-      answers: [
-        { text: "Escuchar", points: 30 },
-        { text: "Tener la mente abierta", points: 25 },
-        { text: "Poner atención", points: 20 },
-        { text: "Participar", points: 15 },
-        { text: "Tener disposición", points: 6 },
-        { text: "Llegar a tiempo", points: 4 }
-      ]
-    },
-    {
-      label: "Aniversario correcto",
-      round: "Pregunta 5",
-      question: "¿Qué aniversario se celebra?",
+      question: "¿En qué fecha se estableció la OSG?",
       mode: "choice",
       answers: [
-        { text: "36", points: 0 },
-        { text: "41", points: 0 },
-        { text: "52", points: 100 }
+        { text: "10 de enero de 1965", points: 0 },
+        { text: "27 de septiembre de 1973", points: 100 },
+        { text: "3 de octubre de 1986", points: 0 }
       ]
     },
     {
-      label: "Materiales del comité central",
-      round: "Pregunta 6",
-      question: "Menciona algo que el comité central proporciona o envía a las áreas para realizar el congreso",
+      label: "Significado de OSG",
+      round: "Pregunta 2",
+      question: "¿Qué significa OSG?",
       answers: [
-        { text: "Programa", points: 50 },
-        { text: "Gafetes", points: 30 },
-        { text: "Información", points: 20 }
+        { text: "Oficina de Servicios Generales", points: 100 }
+      ]
+    },
+    {
+      label: "Participación de Lois",
+      round: "Pregunta 3",
+      question: "¿De qué manera participó Lois, cofundadora de Al-Anon, en el Congreso Nacional Simultáneo?",
+      mode: "choice",
+      answers: [
+        { text: "Asistió personalmente", points: 0 },
+        { text: "Envió una carta para leer en todo el país", points: 100 },
+        { text: "Mandó una grabación", points: 0 }
+      ]
+    },
+    {
+      label: "Propósito de la OSG",
+      round: "Pregunta 4",
+      question: "¿Con qué propósito se creó la OSG?",
+      answers: [
+        { text: "Para ayudar a familiares y amigos de alcohólicos", points: 100 }
+      ]
+    },
+    {
+      label: "Mes del CNS",
+      round: "Pregunta 5",
+      question: "Actualmente, ¿en qué mes se celebra el CNS?",
+      answers: [
+        { text: "Octubre", points: 100 }
+      ]
+    },
+    {
+      label: "Lema del CNS",
+      round: "Pregunta 6",
+      question: "Menciona el lema del CNS",
+      answers: [
+        { text: "Unidos en pensamiento y acción", points: 100 }
       ]
     }
   ];
@@ -120,27 +113,20 @@
     var next = input && typeof input === "object" ? input : base;
     var answers = Array.isArray(next.answers) ? next.answers : base.answers;
     var question = typeof next.question === "string" && next.question.trim() ? next.question : base.question;
-    var anniversaryQuestion = isAnniversaryQuestion(question);
-    var migratedAnswers = answers.map(function (answer) {
-      if (answer && answer.text === "El aniversario de la organización") {
-        answer.text = "El aniversario de la OSG";
-      }
-      return answer;
-    });
 
     return {
       presetVersion: Number(next.presetVersion) || 0,
       bankQuestionId: next.bankQuestionId ? String(next.bankQuestionId) : "",
       round: typeof next.round === "string" && next.round.trim() ? next.round : base.round,
       question: question,
-      mode: next.mode === "choice" || anniversaryQuestion ? "choice" : "survey",
+      mode: next.mode === "choice" ? "choice" : "survey",
       strikes: clampNumber(next.strikes, 0, 3),
-      answers: migratedAnswers.map(function (answer) {
+      answers: answers.map(function (answer) {
         var text = answer && typeof answer.text === "string" ? answer.text : "";
         return {
           id: answer && answer.id ? String(answer.id) : uid(),
           text: text,
-          points: anniversaryQuestion ? anniversaryChoicePoints(text, answer && answer.points) : clampNumber(answer && answer.points, 0, 999),
+          points: clampNumber(answer && answer.points, 0, 999),
           revealed: Boolean(answer && answer.revealed)
         };
       }),
@@ -165,6 +151,9 @@
 
       var parsed = JSON.parse(stored);
       if (!parsed.presetVersion && parsed.question === LEGACY_DEFAULT_QUESTION) {
+        return defaultState();
+      }
+      if (Number(parsed.presetVersion) < PRESET_VERSION) {
         return defaultState();
       }
 
@@ -603,22 +592,8 @@
     return presetIndex >= 0 ? "preset:" + presetIndex : "";
   }
 
-  function isAnniversaryQuestion(question) {
-    return typeof question === "string" && question.trim() === ANNIVERSARY_QUESTION;
-  }
-
   function isChoiceRound() {
-    return state.mode === "choice" || isAnniversaryQuestion(state.question);
-  }
-
-  function anniversaryChoicePoints(text, fallback) {
-    if (text.trim() === "52") {
-      return 100;
-    }
-    if (text.trim() === "36" || text.trim() === "41") {
-      return 0;
-    }
-    return clampNumber(fallback, 0, 999);
+    return state.mode === "choice";
   }
 
   function totalScore() {
