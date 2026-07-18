@@ -51,6 +51,7 @@
       label: "Aniversario correcto",
       round: "Pregunta 5",
       question: "¿Qué aniversario se celebra?",
+      mode: "choice",
       answers: [
         { text: "36", points: 0 },
         { text: "41", points: 0 },
@@ -75,6 +76,8 @@
   var boardRevealedIds = new Set();
   var boardStrikeCount = state.strikes;
   var suppressNextStrikeOverlaySound = false;
+  var savedQuestions = [];
+  var questionOptionsSignature = null;
 
   function uid() {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
@@ -91,8 +94,10 @@
     var preset = PRESET_ROUNDS[index] || PRESET_ROUNDS[0];
     return {
       presetVersion: PRESET_VERSION,
+      bankQuestionId: "",
       round: preset.round,
       question: preset.question,
+      mode: preset.mode === "choice" ? "choice" : "survey",
       strikes: 0,
       answers: createAnswers(preset.answers),
       updatedAt: Date.now()
@@ -125,8 +130,10 @@
 
     return {
       presetVersion: Number(next.presetVersion) || 0,
+      bankQuestionId: next.bankQuestionId ? String(next.bankQuestionId) : "",
       round: typeof next.round === "string" && next.round.trim() ? next.round : base.round,
       question: question,
+      mode: next.mode === "choice" || anniversaryQuestion ? "choice" : "survey",
       strikes: clampNumber(next.strikes, 0, 3),
       answers: migratedAnswers.map(function (answer) {
         var text = answer && typeof answer.text === "string" ? answer.text : "";
@@ -440,10 +447,11 @@
   function renderControl() {
     var roundInput = document.getElementById("roundInput");
     var questionInput = document.getElementById("questionInput");
+    var modeInput = document.getElementById("modeInput");
     var presetSelect = document.getElementById("presetSelect");
     var strikeCount = document.getElementById("strikeCount");
     var editor = document.getElementById("answerEditor");
-    var selectedPresetIndex = findPresetIndexByQuestion(state.question);
+    var selectedQuestionOption = findQuestionOption();
 
     renderPresetOptions(presetSelect);
 
@@ -453,8 +461,11 @@
     if (document.activeElement !== questionInput) {
       questionInput.value = state.question;
     }
+    if (modeInput && document.activeElement !== modeInput) {
+      modeInput.value = state.mode;
+    }
     if (presetSelect && document.activeElement !== presetSelect) {
-      presetSelect.value = selectedPresetIndex >= 0 ? String(selectedPresetIndex) : "";
+      presetSelect.value = selectedQuestionOption;
     }
     strikeCount.textContent = String(state.strikes);
 
@@ -539,10 +550,15 @@
   }
 
   function renderPresetOptions(select) {
-    if (!select || select.options.length === PRESET_ROUNDS.length + 1) {
+    var signature = savedQuestions.map(function (question) {
+      return question.id + ":" + question.revision;
+    }).join("|");
+
+    if (!select || questionOptionsSignature === signature) {
       return;
     }
 
+    questionOptionsSignature = signature;
     select.replaceChildren();
 
     var emptyOption = document.createElement("option");
@@ -550,18 +566,41 @@
     emptyOption.textContent = "Personalizada";
     select.appendChild(emptyOption);
 
+    var presetGroup = document.createElement("optgroup");
+    presetGroup.label = "Incluidas";
     PRESET_ROUNDS.forEach(function (preset, index) {
       var option = document.createElement("option");
-      option.value = String(index);
+      option.value = "preset:" + index;
       option.textContent = preset.label;
-      select.appendChild(option);
+      presetGroup.appendChild(option);
     });
+    select.appendChild(presetGroup);
+
+    if (savedQuestions.length) {
+      var savedGroup = document.createElement("optgroup");
+      savedGroup.label = "Guardadas en el banco";
+      savedQuestions.forEach(function (question) {
+        var option = document.createElement("option");
+        option.value = "saved:" + question.id;
+        option.textContent = question.label;
+        savedGroup.appendChild(option);
+      });
+      select.appendChild(savedGroup);
+    }
   }
 
-  function findPresetIndexByQuestion(question) {
-    return PRESET_ROUNDS.findIndex(function (preset) {
-      return preset.question === question;
+  function findQuestionOption() {
+    var savedQuestion = savedQuestions.find(function (question) {
+      return state.bankQuestionId && question.id === state.bankQuestionId;
     });
+    if (savedQuestion) {
+      return "saved:" + savedQuestion.id;
+    }
+
+    var presetIndex = PRESET_ROUNDS.findIndex(function (preset) {
+      return preset.question === state.question;
+    });
+    return presetIndex >= 0 ? "preset:" + presetIndex : "";
   }
 
   function isAnniversaryQuestion(question) {
@@ -569,7 +608,7 @@
   }
 
   function isChoiceRound() {
-    return isAnniversaryQuestion(state.question);
+    return state.mode === "choice" || isAnniversaryQuestion(state.question);
   }
 
   function anniversaryChoicePoints(text, fallback) {
@@ -697,23 +736,120 @@
 
     setState(function (draft) {
       draft.presetVersion = PRESET_VERSION;
+      draft.bankQuestionId = "";
       draft.round = preset.round;
       draft.question = preset.question;
+      draft.mode = preset.mode === "choice" ? "choice" : "survey";
       draft.strikes = 0;
       draft.answers = createAnswers(preset.answers);
     });
   }
 
+  function loadSavedQuestion(id) {
+    var question = savedQuestions.find(function (item) {
+      return item.id === id;
+    });
+    if (!question) {
+      return;
+    }
+
+    setState(function (draft) {
+      draft.presetVersion = PRESET_VERSION;
+      draft.bankQuestionId = question.id;
+      draft.round = question.round;
+      draft.question = question.question;
+      draft.mode = question.mode === "choice" ? "choice" : "survey";
+      draft.strikes = 0;
+      draft.answers = createAnswers(question.answers);
+    });
+  }
+
+  function loadQuestionOption(value) {
+    if (value.indexOf("preset:") === 0) {
+      loadPreset(Number(value.slice(7)));
+    } else if (value.indexOf("saved:") === 0) {
+      loadSavedQuestion(value.slice(6));
+    }
+  }
+
+  function setControlBankStatus(message, tone) {
+    var status = document.getElementById("controlBankStatus");
+    if (!status) {
+      return;
+    }
+    status.textContent = message || "";
+    status.dataset.tone = tone || "";
+  }
+
+  async function loadSavedQuestions() {
+    if (!window.QuestionBank || !window.QuestionBank.isConfigured()) {
+      setControlBankStatus("Conecta Supabase para guardar preguntas compartidas.");
+      renderControl();
+      return;
+    }
+
+    setControlBankStatus("Cargando banco de preguntas…");
+    try {
+      savedQuestions = await window.QuestionBank.list({ archived: false });
+      questionOptionsSignature = "";
+      setControlBankStatus(savedQuestions.length + (savedQuestions.length === 1
+        ? " pregunta compartida disponible."
+        : " preguntas compartidas disponibles."), "success");
+      renderControl();
+    } catch (error) {
+      setControlBankStatus(error.message, "error");
+    }
+  }
+
+  async function saveCurrentQuestionToBank() {
+    var button = document.getElementById("saveToBank");
+    if (!window.QuestionBank || !window.QuestionBank.isConfigured()) {
+      setControlBankStatus("Primero conecta el proyecto gratuito de Supabase.", "error");
+      return;
+    }
+
+    var payload = {
+      label: state.question.length > 56 ? state.question.slice(0, 53) + "…" : state.question,
+      round: state.round,
+      question: state.question,
+      mode: state.mode,
+      answers: state.answers
+    };
+    var validation = window.QuestionBank.validate(payload);
+    if (validation.errors.length) {
+      setControlBankStatus(validation.errors.join(" "), "error");
+      return;
+    }
+
+    button.disabled = true;
+    setControlBankStatus("Guardando en el banco…");
+    try {
+      var created = await window.QuestionBank.create(validation.value);
+      state.bankQuestionId = created.id;
+      saveState();
+      await loadSavedQuestions();
+      setControlBankStatus("Pregunta guardada permanentemente.", "success");
+    } catch (error) {
+      setControlBankStatus(error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function bindControlEvents() {
     var roundInput = document.getElementById("roundInput");
     var questionInput = document.getElementById("questionInput");
+    var modeInput = document.getElementById("modeInput");
     var presetSelect = document.getElementById("presetSelect");
     var loadPresetButton = document.getElementById("loadPreset");
     var strikeDown = document.getElementById("strikeDown");
     var strikeUp = document.getElementById("strikeUp");
     var addAnswerButton = document.getElementById("addAnswer");
+    var saveToBankButton = document.getElementById("saveToBank");
     var hideAllButton = document.getElementById("hideAll");
     var resetRoundButton = document.getElementById("resetRound");
+
+    saveToBankButton.disabled = !window.QuestionBank || !window.QuestionBank.isConfigured();
 
     roundInput.addEventListener("input", function () {
       setState(function (draft) {
@@ -723,13 +859,20 @@
 
     questionInput.addEventListener("input", function () {
       setState(function (draft) {
+        draft.bankQuestionId = "";
         draft.question = questionInput.value;
       }, { render: false });
     });
 
+    modeInput.addEventListener("change", function () {
+      setState(function (draft) {
+        draft.mode = modeInput.value;
+      });
+    });
+
     loadPresetButton.addEventListener("click", function () {
       if (presetSelect.value !== "") {
-        loadPreset(Number(presetSelect.value));
+        loadQuestionOption(presetSelect.value);
       }
     });
 
@@ -750,6 +893,7 @@
     });
 
     addAnswerButton.addEventListener("click", addAnswer);
+    saveToBankButton.addEventListener("click", saveCurrentQuestionToBank);
     hideAllButton.addEventListener("click", hideAll);
     resetRoundButton.addEventListener("click", resetRound);
   }
@@ -895,6 +1039,7 @@
 
   if (page === "control") {
     bindControlEvents();
+    loadSavedQuestions();
   }
 
   if (page === "board") {

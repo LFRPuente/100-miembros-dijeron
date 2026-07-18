@@ -14,6 +14,7 @@
         <h1>100 Miembros Dijeron</h1>
       </div>
       <nav class="page-actions" aria-label="Paginas">
+        <a class="ghost-button" href="./questions.html">Banco de preguntas</a>
         <a class="ghost-button" href="./index.html">Tablero</a>
       </nav>
     </header>
@@ -26,6 +27,13 @@
       <label class="field wide-field">
         <span>Pregunta</span>
         <input id="questionInput" type="text" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Tipo</span>
+        <select id="modeInput">
+          <option value="survey">Encuesta</option>
+          <option value="choice">Opción múltiple</option>
+        </select>
       </label>
       <div class="strike-control" aria-label="Fallas">
         <span>Fallas</span>
@@ -43,6 +51,7 @@
         <select id="presetSelect"></select>
       </label>
       <button class="primary-button" type="button" id="loadPreset">Cargar</button>
+      <p class="control-bank-status" id="controlBankStatus" role="status" aria-live="polite"></p>
     </section>
 
     <section class="answer-editor" aria-label="Editor de respuestas">
@@ -55,12 +64,15 @@
       <div id="answerEditor"></div>
       <div class="editor-actions">
         <button class="primary-button" type="button" id="addAnswer">Agregar</button>
+        <button class="plain-button" type="button" id="saveToBank">Guardar como nueva</button>
         <button class="plain-button" type="button" id="hideAll">Cerrar todo</button>
         <button class="plain-button danger" type="button" id="resetRound">Reiniciar ronda</button>
       </div>
     </section>
   </main>
 
+  <script src="./supabase-config.js"></script>
+  <script src="./question-bank.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

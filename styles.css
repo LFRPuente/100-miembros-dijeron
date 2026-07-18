@@ -32,7 +32,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -819,7 +820,7 @@ body[data-page="board"].is-striking .stage-shell {
 
 .editor-band {
   display: grid;
-  grid-template-columns: minmax(130px, 180px) minmax(280px, 1fr) minmax(150px, 180px);
+  grid-template-columns: minmax(130px, 170px) minmax(280px, 1fr) minmax(150px, 180px) minmax(140px, 160px);
   gap: 14px;
   align-items: end;
   margin: 12px 0 18px;
@@ -839,7 +840,8 @@ body[data-page="board"].is-striking .stage-shell {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 46px;
   border: 1px solid var(--line);
@@ -864,7 +866,8 @@ select option {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--cyan);
   box-shadow: 0 0 0 3px rgba(94, 216, 255, 0.16);
 }
@@ -875,6 +878,22 @@ select:focus {
   gap: 14px;
   align-items: end;
   margin: 0 0 18px;
+}
+
+.control-bank-status {
+  grid-column: 1 / -1;
+  min-height: 20px;
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.control-bank-status[data-tone="success"] {
+  color: #a7f3cf;
+}
+
+.control-bank-status[data-tone="error"] {
+  color: #ffaaa5;
 }
 
 .strike-control {
@@ -1010,6 +1029,340 @@ select:focus {
 .danger {
   border-color: rgba(216, 59, 54, 0.62);
   color: #fff;
+}
+
+.bank-shell {
+  width: min(1380px, calc(100% - 32px));
+  max-width: none;
+}
+
+.bank-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+  gap: 24px;
+  align-items: center;
+  margin: 10px 0 18px;
+  padding: 22px 24px;
+  border: 1px solid rgba(94, 216, 255, 0.24);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 0 0, rgba(94, 216, 255, 0.14), transparent 38%),
+    var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.bank-summary h2 {
+  margin: 10px 0 6px;
+  color: #fff;
+  font-size: 1.45rem;
+}
+
+.bank-summary p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.connection-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(94, 216, 255, 0.38);
+  border-radius: 999px;
+  padding: 0 11px;
+  color: var(--cyan);
+  background: rgba(94, 216, 255, 0.1);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.connection-badge[data-tone="success"] {
+  border-color: rgba(71, 209, 140, 0.5);
+  color: #8ff0be;
+  background: rgba(71, 209, 140, 0.12);
+}
+
+.connection-badge[data-tone="warning"] {
+  border-color: rgba(245, 200, 75, 0.48);
+  color: var(--gold);
+  background: rgba(245, 200, 75, 0.1);
+}
+
+.connection-badge[data-tone="error"] {
+  border-color: rgba(255, 91, 82, 0.55);
+  color: #ff938d;
+  background: rgba(216, 59, 54, 0.13);
+}
+
+.bank-status {
+  min-height: 48px;
+  border-left: 3px solid rgba(94, 216, 255, 0.58);
+  padding: 8px 0 8px 14px;
+  font-size: 0.9rem;
+}
+
+.bank-status[data-tone="success"] {
+  border-left-color: var(--green);
+  color: #b9f7d7;
+}
+
+.bank-status[data-tone="warning"] {
+  border-left-color: var(--gold);
+  color: #ffeaa5;
+}
+
+.bank-status[data-tone="error"] {
+  border-left-color: var(--red);
+  color: #ffb0ac;
+}
+
+.bank-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(8, 18, 35, 0.68);
+}
+
+.archive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.archive-toggle input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--gold);
+}
+
+.bank-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.bank-layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.85fr) minmax(520px, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.bank-list-panel,
+.bank-form-panel {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.bank-form-panel {
+  position: sticky;
+  top: 14px;
+}
+
+.bank-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.bank-panel-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.bank-panel-heading > strong {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #1c1300;
+  background: var(--gold);
+}
+
+.bank-list {
+  display: grid;
+  gap: 12px;
+}
+
+.bank-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.bank-empty strong {
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.bank-question-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(94, 216, 255, 0.08), transparent 50%),
+    rgba(255, 255, 255, 0.05);
+}
+
+.bank-question-card.is-archived {
+  opacity: 0.68;
+  border-style: dashed;
+}
+
+.bank-question-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.bank-question-heading h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.34;
+}
+
+.bank-mode {
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--gold);
+  background: rgba(245, 200, 75, 0.11);
+  font-size: 0.68rem;
+  font-weight: 900;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.bank-question-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.bank-question-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bank-question-actions button {
+  min-height: 38px;
+  padding: 0 13px;
+}
+
+.bank-form-grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(140px, 0.7fr) minmax(180px, 0.8fr);
+  gap: 12px;
+}
+
+.bank-question-field {
+  margin-top: 14px;
+}
+
+.bank-question-field textarea {
+  min-height: 104px;
+  resize: vertical;
+  padding: 12px;
+  line-height: 1.45;
+}
+
+.bank-answer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.bank-answer-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.bank-answer-heading span {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bank-answer-heading small {
+  color: var(--muted);
+}
+
+.bank-answer-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.bank-answer-row {
+  display: grid;
+  grid-template-columns: 118px minmax(180px, 1fr) 90px 40px;
+  gap: 9px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bank-answer-number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--gold);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 900;
+}
+
+.bank-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.bank-form-actions button {
+  min-height: 46px;
+  padding: 0 18px;
 }
 
 @keyframes revealFlip {
@@ -1381,6 +1734,38 @@ select:focus {
   .page-actions {
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+
+  .bank-shell {
+    width: min(100% - 20px, 680px);
+  }
+
+  .bank-summary,
+  .bank-toolbar,
+  .bank-layout,
+  .bank-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .bank-form-panel {
+    position: static;
+  }
+
+  .bank-answer-row {
+    grid-template-columns: 1fr 90px 42px;
+  }
+
+  .bank-answer-row .order-tools {
+    grid-column: 1 / -1;
+  }
+
+  .bank-answer-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .surprise-overlay {
