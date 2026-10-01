@@ -342,7 +342,7 @@ a {
   display: block;
   flex: 0 1 auto;
   max-width: 100%;
-  font-size: 2.3rem;
+  font-size: 2.8rem;
   font-weight: 900;
   line-height: 0.98;
   text-transform: uppercase;
@@ -619,6 +619,8 @@ body[data-page="board"].is-striking .stage-shell {
 }
 
 .tile-back {
+  position: relative;
+  min-height: inherit;
   justify-content: space-between;
   gap: 14px;
   transform: rotateX(180deg);
@@ -637,14 +639,13 @@ body[data-page="board"].is-striking .stage-shell {
 .answer-text {
   flex: 1;
   min-width: 0;
-  padding: 0 18px;
+  padding: 12px 18px;
   font-size: 1.26rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
   text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .answer-tile.is-opening .answer-text {
@@ -656,6 +657,7 @@ body[data-page="board"].is-striking .stage-shell {
   place-items: center;
   align-self: stretch;
   width: 88px;
+  flex: 0 0 88px;
   color: #1c1300;
   background: linear-gradient(180deg, #ffe890, var(--gold));
   font-size: 1.85rem;
@@ -681,7 +683,9 @@ body[data-page="board"].is-striking .stage-shell {
 .choice-option {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  min-width: 0;
   place-items: center;
   min-height: 280px;
   border: 4px solid rgba(245, 200, 75, 0.92);
@@ -744,14 +748,22 @@ body[data-page="board"].is-striking .stage-shell {
 .choice-text {
   position: relative;
   z-index: 1;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
   color: #fff;
-  font-size: 5rem;
+  font-size: 1.65rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
   text-transform: uppercase;
   text-shadow:
     0 4px 0 rgba(0, 0, 0, 0.55),
     0 0 30px rgba(255, 255, 255, 0.22);
+}
+
+.choice-text.is-short-choice {
+  font-size: 5rem;
 }
 
 .choice-badge {
@@ -874,7 +886,7 @@ textarea:focus {
 
 .preset-band {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) 150px;
+  grid-template-columns: minmax(0, 1fr) 120px 170px;
   gap: 14px;
   align-items: end;
   margin: 0 0 18px;
@@ -894,6 +906,10 @@ textarea:focus {
 
 .control-bank-status[data-tone="error"] {
   color: #ffaaa5;
+}
+
+.control-bank-status[data-tone="warning"] {
+  color: var(--gold);
 }
 
 .strike-control {
@@ -1871,7 +1887,7 @@ textarea:focus {
   }
 
   .question-band span {
-    font-size: 1.05rem;
+    font-size: 1.5rem;
   }
 
   .strike-row {
@@ -1889,6 +1905,7 @@ textarea:focus {
 
   .answer-points {
     width: 68px;
+    flex-basis: 68px;
     font-size: 1.35rem;
   }
 
@@ -1900,20 +1917,24 @@ textarea:focus {
 
   .choice-option {
     min-height: 150px;
-    grid-template-columns: 58px 1fr 58px;
+    grid-template-columns: 44px minmax(0, 1fr) 56px;
     grid-template-rows: 1fr;
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+    padding: 16px 10px;
   }
 
   .choice-letter {
-    width: 54px;
-    height: 54px;
+    width: 44px;
+    height: 44px;
     font-size: 1.6rem;
   }
 
   .choice-text {
-    font-size: 3.4rem;
+    font-size: 1.125rem;
+  }
+
+  .choice-text.is-short-choice {
+    font-size: 2.75rem;
   }
 
   .choice-badge {

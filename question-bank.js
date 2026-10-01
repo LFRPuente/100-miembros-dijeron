@@ -1,6 +1,38 @@
 (function (global) {
   "use strict";
 
+  var CACHE_KEY = "cien_mex_question_bank_cache_v1";
+  var status = { source: "none", cachedAt: null };
+
+  function readCache() {
+    try {
+      var cached = JSON.parse(global.localStorage.getItem(CACHE_KEY));
+      return cached && cached.url === getConfig().url && Array.isArray(cached.items) ? cached : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeCache(items, scope) {
+    var cached = readCache();
+    var retained = cached && scope !== "all" ? cached.items.filter(function (item) {
+      return Boolean(item.archived) !== Boolean(scope) && !items.some(function (current) {
+        return current.id === item.id;
+      });
+    }) : [];
+    var snapshot = {
+      url: getConfig().url,
+      items: retained.concat(items),
+      cachedAt: Date.now()
+    };
+    try {
+      global.localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot));
+    } catch (error) {
+      // A full or disabled browser store must not block the shared bank.
+    }
+    return snapshot.cachedAt;
+  }
+
   function getConfig() {
     var input = global.SUPABASE_CONFIG || {};
     return {
@@ -64,10 +96,13 @@
     if (question.answers.length === 0) {
       errors.push("Agrega al menos una respuesta.");
     }
-    if (question.mode === "choice" && !question.answers.some(function (answer) {
+    if (question.answers.length > 26) {
+      errors.push("Usa como máximo 26 respuestas por pregunta.");
+    }
+    if (question.mode === "choice" && question.answers.filter(function (answer) {
       return answer.points > 0;
-    })) {
-      errors.push("En opción múltiple debe existir al menos una respuesta correcta con puntos.");
+    }).length !== 1) {
+      errors.push("En opción múltiple debe existir exactamente una respuesta correcta con puntos.");
     }
 
     return {
@@ -92,13 +127,27 @@
       headers.Authorization = "Bearer " + config.publishableKey;
     }
 
-    var response = await global.fetch(config.url + "/rest/v1/" + path, {
-      method: settings.method || "GET",
-      headers: headers,
-      body: settings.body === undefined ? undefined : JSON.stringify(settings.body)
-    });
-
-    var text = await response.text();
+    var controller = typeof global.AbortController === "function" ? new global.AbortController() : null;
+    var timer = controller ? global.setTimeout(function () { controller.abort(); }, 8000) : null;
+    var response;
+    var text;
+    try {
+      response = await global.fetch(config.url + "/rest/v1/" + path, {
+        method: settings.method || "GET",
+        headers: headers,
+        signal: controller ? controller.signal : undefined,
+        body: settings.body === undefined ? undefined : JSON.stringify(settings.body)
+      });
+      text = await response.text();
+    } catch (error) {
+      var unavailable = new Error("No se pudo conectar con Supabase. Revisa si el proyecto está pausado o si su URL cambió y vuelve a intentar.");
+      unavailable.code = "BANK_UNAVAILABLE";
+      throw unavailable;
+    } finally {
+      if (timer !== null) {
+        global.clearTimeout(timer);
+      }
+    }
     var data = null;
     if (text) {
       try {
@@ -109,10 +158,15 @@
     }
 
     if (!response.ok) {
-      var message = data && typeof data === "object" && data.message ? data.message : "No se pudo completar la operación.";
+      var message = response.status >= 500
+        ? "Supabase todavía no está disponible. Si acabas de reanudar el proyecto, espera a que termine de arrancar y pulsa Actualizar."
+        : data && typeof data === "object" && data.message ? data.message : "No se pudo completar la operación.";
       var requestError = new Error(message);
       requestError.status = response.status;
       requestError.details = data;
+      if (response.status >= 500) {
+        requestError.code = "BANK_UNAVAILABLE";
+      }
       throw requestError;
     }
 
@@ -124,8 +178,22 @@
     var archivedFilter = settings.archived === "all" ? "" : "&archived=eq." + (settings.archived ? "true" : "false");
     var path = "questions?select=id,label,round,question,mode,answers,archived,revision,created_at,updated_at" +
       archivedFilter + "&order=updated_at.desc";
-    var data = await request(path);
-    return Array.isArray(data) ? data : [];
+    try {
+      var data = await request(path);
+      var items = Array.isArray(data) ? data : [];
+      status = { source: "remote", cachedAt: writeCache(items, settings.archived || false) };
+      return items;
+    } catch (error) {
+      var cached = readCache();
+      if (error.code !== "BANK_UNAVAILABLE" || !cached) {
+        status = { source: "none", cachedAt: null };
+        throw error;
+      }
+      status = { source: "cache", cachedAt: cached.cachedAt };
+      return cached.items.filter(function (item) {
+        return settings.archived === "all" || Boolean(item.archived) === Boolean(settings.archived);
+      });
+    }
   }
 
   async function create(input) {
@@ -198,6 +266,7 @@
 
   global.QuestionBank = Object.freeze({
     isConfigured: isConfigured,
+    getStatus: function () { return Object.assign({}, status); },
     validate: validateQuestion,
     list: list,
     create: create,

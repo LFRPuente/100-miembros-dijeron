@@ -4,12 +4,20 @@ const vm = require("node:vm");
 
 const calls = [];
 const responses = [];
+const storage = new Map();
 
 function queueResponse(data, status = 200) {
   responses.push({ data, status });
 }
 
 const window = {
+  localStorage: {
+    getItem: (key) => storage.get(key) || null,
+    setItem: (key, value) => storage.set(key, value)
+  },
+  AbortController,
+  setTimeout,
+  clearTimeout,
   SUPABASE_CONFIG: {
     url: "https://example-project.supabase.co",
     publishableKey: "sb_publishable_example_key_long_enough_for_testing"
@@ -19,6 +27,9 @@ const window = {
     const response = responses.shift();
     if (!response) {
       throw new Error("No mock response queued");
+    }
+    if (response.error) {
+      throw response.error;
     }
     return {
       ok: response.status >= 200 && response.status < 300,
@@ -89,6 +100,47 @@ async function run() {
   queueResponse([{ ...listed[0], archived: true, revision: 2 }]);
   const archived = await bank.setArchived("q1", true, 1);
   assert.equal(archived.archived, true);
+
+  const activeItem = { ...listed[0], archived: false };
+  const archivedItem = { ...listed[0], id: "q2", archived: true };
+  queueResponse([activeItem, archivedItem]);
+  await bank.list({ archived: "all" });
+  assert.equal(bank.getStatus().source, "remote");
+
+  responses.push({ error: new TypeError("fetch failed") });
+  const offline = await bank.list({ archived: false });
+  assert.equal(offline.length, 1);
+  assert.equal(offline[0].id, "q1");
+  assert.equal(bank.getStatus().source, "cache");
+
+  responses.push({ error: new TypeError("fetch failed") });
+  await assert.rejects(() => bank.create(activeItem), (error) => error.code === "BANK_UNAVAILABLE");
+
+  queueResponse({ message: "Invalid API key" }, 401);
+  await assert.rejects(() => bank.list(), (error) => error.status === 401);
+
+  // A restored question must replace its archived copy, not duplicate it.
+  queueResponse([activeItem, { ...archivedItem, archived: false }]);
+  await bank.list({ archived: false });
+  responses.push({ error: new TypeError("fetch failed") });
+  assert.equal((await bank.list({ archived: "all" })).length, 2);
+
+  window.SUPABASE_CONFIG.url = "https://another-project.supabase.co";
+  responses.push({ error: new TypeError("fetch failed") });
+  await assert.rejects(() => bank.list(), (error) => error.code === "BANK_UNAVAILABLE");
+
+  const multipleCorrect = bank.validate({
+    ...activeItem, mode: "choice", answers: [{ text: "A", points: 100 }, { text: "B", points: 100 }]
+  });
+  assert.equal(multipleCorrect.errors.length, 1);
+
+  let timeoutDelay;
+  window.setTimeout = (callback, delay) => { timeoutDelay = delay; return setTimeout(callback, 1); };
+  window.fetch = (url, options) => new Promise((resolve, reject) => {
+    options.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  });
+  await assert.rejects(() => bank.list(), (error) => error.code === "BANK_UNAVAILABLE");
+  assert.equal(timeoutDelay, 8000);
 
   console.log("question-bank tests: ok");
 }

@@ -27,6 +27,7 @@
   var cancelButton = document.getElementById("cancelQuestion");
   var saveButton = document.getElementById("saveQuestion");
   var newButton = document.getElementById("newQuestion");
+  var refreshButton = document.getElementById("refreshQuestions");
 
   function uid() {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
@@ -45,6 +46,7 @@
     saveButton.disabled = busy || !window.QuestionBank.isConfigured();
     newButton.disabled = busy;
     addAnswerButton.disabled = busy;
+    refreshButton.disabled = busy;
   }
 
   function formatDate(value) {
@@ -254,9 +256,10 @@
       var empty = document.createElement("div");
       empty.className = "bank-empty";
       var emptyTitle = document.createElement("strong");
-      emptyTitle.textContent = items.length ? "No hay coincidencias" : "Aún no hay preguntas guardadas";
+      var unavailable = connectionBadge.dataset.tone === "error";
+      emptyTitle.textContent = unavailable ? "Banco no disponible" : items.length ? "No hay coincidencias" : "Aún no hay preguntas guardadas";
       var emptyText = document.createElement("span");
-      emptyText.textContent = items.length ? "Prueba otra búsqueda o muestra las archivadas." : "Crea la primera con el formulario.";
+      emptyText.textContent = unavailable ? "Reintenta la conexión para cargar las preguntas guardadas." : items.length ? "Prueba otra búsqueda o muestra las archivadas." : "Crea la primera con el formulario.";
       empty.append(emptyTitle, emptyText);
       listElement.appendChild(empty);
       return;
@@ -331,9 +334,12 @@
 
     try {
       items = await window.QuestionBank.list({ archived: "all" });
-      connectionBadge.textContent = "Conectado";
-      connectionBadge.dataset.tone = "success";
-      setStatus(items.length + (items.length === 1 ? " pregunta guardada." : " preguntas guardadas."), "success");
+      var cached = window.QuestionBank.getStatus().source === "cache";
+      connectionBadge.textContent = cached ? "Copia local" : "Conectado";
+      connectionBadge.dataset.tone = cached ? "warning" : "success";
+      setStatus(cached
+        ? "Supabase no está disponible. Puedes jugar con estas preguntas descargadas; los cambios requieren conexión."
+        : items.length + (items.length === 1 ? " pregunta guardada." : " preguntas guardadas."), cached ? "warning" : "success");
     } catch (error) {
       connectionBadge.textContent = "Sin conexión";
       connectionBadge.dataset.tone = "error";
@@ -433,6 +439,7 @@
   }
 
   searchInput.addEventListener("input", renderList);
+  refreshButton.addEventListener("click", function () { refresh(); });
   showArchivedInput.addEventListener("change", renderList);
   modeInput.addEventListener("change", updateModeHelp);
   form.addEventListener("submit", submitQuestion);

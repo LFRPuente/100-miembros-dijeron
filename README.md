@@ -35,3 +35,16 @@ publicable está diseñada para código de navegador y el acceso se limita con R
 - El rol público no tiene permiso de `DELETE`; archivar nunca borra el historial.
 El acceso es público por requisito: cualquier persona con el enlace puede crear,
 editar o archivar preguntas.
+
+## Cuando Supabase no responde
+
+Cada descarga correcta conserva una copia de las preguntas en el navegador.
+Si falla la conexión, el juego permite usar esa copia e indica que puede estar
+desactualizada. Crear, editar y archivar siguen requiriendo conexión al banco
+compartido; no se anuncian cambios locales como si estuvieran guardados en línea.
+Usa **Actualizar** en el banco o **Actualizar banco** en el control para reintentar
+después de restaurar el proyecto en Supabase. Un navegador que nunca descargó
+el banco solo dispone de las preguntas incluidas.
+
+Las preguntas originales siguen disponibles en **Preguntas anteriores** y las
+actualizaciones conservan la ronda guardada, sus puntos y sus respuestas abiertas.

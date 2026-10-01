@@ -62,6 +62,65 @@
       ]
     }
   ];
+  var LEGACY_PRESET_ROUNDS = [
+    {
+      label: "Acontecimiento del CNS",
+      round: "Pregunta 1",
+      question: "¿Qué acontecimiento se celebra mediante el Congreso Nacional Simultáneo?",
+      answers: [{ text: "El aniversario de la OSG", points: 100 }]
+    },
+    {
+      label: "Unidos en...",
+      round: "Pregunta 2",
+      question: "Completa la oración: \"Unidos en...\"",
+      answers: [{ text: "Pensamiento y acción", points: 100 }]
+    },
+    {
+      label: "Al llegar a un congreso",
+      round: "Pregunta 3",
+      question: "Menciona algo que una persona hace al llegar a un congreso o seminario",
+      answers: [
+        { text: "Registrarse", points: 50 },
+        { text: "Saludar", points: 30 },
+        { text: "Buscar su lugar", points: 20 }
+      ]
+    },
+    {
+      label: "Aprovechar una reunión",
+      round: "Pregunta 4",
+      question: "Menciona algo que necesitas para aprovechar mejor una reunión o Congreso",
+      answers: [
+        { text: "Escuchar", points: 30 },
+        { text: "Tener la mente abierta", points: 25 },
+        { text: "Poner atención", points: 20 },
+        { text: "Participar", points: 15 },
+        { text: "Tener disposición", points: 6 },
+        { text: "Llegar a tiempo", points: 4 }
+      ]
+    },
+    {
+      label: "Aniversario correcto",
+      round: "Pregunta 5",
+      question: "¿Qué aniversario se celebra?",
+      mode: "choice",
+      answers: [
+        { text: "36", points: 0 },
+        { text: "41", points: 0 },
+        { text: "52", points: 100 }
+      ]
+    },
+    {
+      label: "Materiales del comité central",
+      round: "Pregunta 6",
+      question: "Menciona algo que el comité central proporciona o envía a las áreas para realizar el congreso",
+      answers: [
+        { text: "Programa", points: 50 },
+        { text: "Gafetes", points: 30 },
+        { text: "Información", points: 20 }
+      ]
+    }
+  ];
+  var ALL_PRESET_ROUNDS = PRESET_ROUNDS.concat(LEGACY_PRESET_ROUNDS);
   var channel = "BroadcastChannel" in window ? new BroadcastChannel(CHANNEL_NAME) : null;
   var state = normalizeState(loadState());
   var page = document.body.dataset.page;
@@ -113,13 +172,17 @@
     var next = input && typeof input === "object" ? input : base;
     var answers = Array.isArray(next.answers) ? next.answers : base.answers;
     var question = typeof next.question === "string" && next.question.trim() ? next.question : base.question;
+    var matchingPreset = ALL_PRESET_ROUNDS.find(function (preset) {
+      return preset.question === question;
+    });
+    var mode = next.mode || (matchingPreset && matchingPreset.mode);
 
     return {
-      presetVersion: Number(next.presetVersion) || 0,
+      presetVersion: Math.max(PRESET_VERSION, Number(next.presetVersion) || 0),
       bankQuestionId: next.bankQuestionId ? String(next.bankQuestionId) : "",
       round: typeof next.round === "string" && next.round.trim() ? next.round : base.round,
       question: question,
-      mode: next.mode === "choice" ? "choice" : "survey",
+      mode: mode === "choice" ? "choice" : "survey",
       strikes: clampNumber(next.strikes, 0, 3),
       answers: answers.map(function (answer) {
         var text = answer && typeof answer.text === "string" ? answer.text : "";
@@ -150,10 +213,10 @@
       }
 
       var parsed = JSON.parse(stored);
-      if (!parsed.presetVersion && parsed.question === LEGACY_DEFAULT_QUESTION) {
+      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.answers)) {
         return defaultState();
       }
-      if (Number(parsed.presetVersion) < PRESET_VERSION) {
+      if (!parsed.presetVersion && parsed.question === LEGACY_DEFAULT_QUESTION) {
         return defaultState();
       }
 
@@ -281,7 +344,7 @@
         choiceLetter.textContent = letter;
 
         var choiceText = document.createElement("span");
-        choiceText.className = "choice-text";
+        choiceText.className = "choice-text" + (answer.text.trim().length <= 4 ? " is-short-choice" : "");
         choiceText.textContent = answer.text || " ";
 
         var choiceBadge = document.createElement("span");
@@ -372,7 +435,9 @@
     element.style.whiteSpace = "nowrap";
 
     var parent = element.parentElement;
-    var maxWidth = parent ? Math.max(180, parent.clientWidth - 88) : element.clientWidth;
+    var parentStyle = parent ? window.getComputedStyle(parent) : null;
+    var horizontalPadding = parentStyle ? parseFloat(parentStyle.paddingLeft) + parseFloat(parentStyle.paddingRight) : 0;
+    var maxWidth = parent ? Math.max(1, parent.clientWidth - horizontalPadding) : element.clientWidth;
     var baseSize = parseFloat(window.getComputedStyle(element).fontSize) || 36;
     var minSize = parent && parent.clientWidth < 520 ? 15 : 20;
     var singleLineMin = parent && parent.clientWidth >= 900 ? 28 : minSize;
@@ -565,6 +630,16 @@
     });
     select.appendChild(presetGroup);
 
+    var legacyGroup = document.createElement("optgroup");
+    legacyGroup.label = "Preguntas anteriores";
+    LEGACY_PRESET_ROUNDS.forEach(function (preset, index) {
+      var option = document.createElement("option");
+      option.value = "preset:" + (PRESET_ROUNDS.length + index);
+      option.textContent = preset.label;
+      legacyGroup.appendChild(option);
+    });
+    select.appendChild(legacyGroup);
+
     if (savedQuestions.length) {
       var savedGroup = document.createElement("optgroup");
       savedGroup.label = "Guardadas en el banco";
@@ -586,7 +661,7 @@
       return "saved:" + savedQuestion.id;
     }
 
-    var presetIndex = PRESET_ROUNDS.findIndex(function (preset) {
+    var presetIndex = ALL_PRESET_ROUNDS.findIndex(function (preset) {
       return preset.question === state.question;
     });
     return presetIndex >= 0 ? "preset:" + presetIndex : "";
@@ -704,7 +779,7 @@
   }
 
   function loadPreset(index) {
-    var preset = PRESET_ROUNDS[index];
+    var preset = ALL_PRESET_ROUNDS[index];
     if (!preset) {
       return;
     }
@@ -767,9 +842,12 @@
     try {
       savedQuestions = await window.QuestionBank.list({ archived: false });
       questionOptionsSignature = "";
-      setControlBankStatus(savedQuestions.length + (savedQuestions.length === 1
+      var bankStatus = window.QuestionBank.getStatus();
+      setControlBankStatus(bankStatus.source === "cache"
+        ? "Sin conexión a Supabase. Disponibles: " + savedQuestions.length + " preguntas de la copia local."
+        : savedQuestions.length + (savedQuestions.length === 1
         ? " pregunta compartida disponible."
-        : " preguntas compartidas disponibles."), "success");
+        : " preguntas compartidas disponibles."), bankStatus.source === "cache" ? "warning" : "success");
       renderControl();
     } catch (error) {
       setControlBankStatus(error.message, "error");
@@ -821,6 +899,7 @@
     var strikeUp = document.getElementById("strikeUp");
     var addAnswerButton = document.getElementById("addAnswer");
     var saveToBankButton = document.getElementById("saveToBank");
+    var refreshBankButton = document.getElementById("refreshBank");
     var hideAllButton = document.getElementById("hideAll");
     var resetRoundButton = document.getElementById("resetRound");
 
@@ -869,6 +948,7 @@
 
     addAnswerButton.addEventListener("click", addAnswer);
     saveToBankButton.addEventListener("click", saveCurrentQuestionToBank);
+    refreshBankButton.addEventListener("click", loadSavedQuestions);
     hideAllButton.addEventListener("click", hideAll);
     resetRoundButton.addEventListener("click", resetRound);
   }
