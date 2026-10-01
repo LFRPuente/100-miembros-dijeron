@@ -439,8 +439,8 @@
     var horizontalPadding = parentStyle ? parseFloat(parentStyle.paddingLeft) + parseFloat(parentStyle.paddingRight) : 0;
     var maxWidth = parent ? Math.max(1, parent.clientWidth - horizontalPadding) : element.clientWidth;
     var baseSize = parseFloat(window.getComputedStyle(element).fontSize) || 36;
-    var minSize = parent && parent.clientWidth < 520 ? 15 : 20;
-    var singleLineMin = parent && parent.clientWidth >= 900 ? 28 : minSize;
+    var minSize = parent && parent.clientWidth < 520 ? 18 : 20;
+    var singleLineMin = parent && parent.clientWidth >= 900 ? 28 : 22;
     var fittedSize = baseSize;
     var maxTextHeight = Math.max(72, fittedSize * 2.25);
 

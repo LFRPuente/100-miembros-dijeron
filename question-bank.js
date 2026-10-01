@@ -99,6 +99,9 @@
     if (question.answers.length > 26) {
       errors.push("Usa como máximo 26 respuestas por pregunta.");
     }
+    if (question.mode === "choice" && question.answers.length < 2) {
+      errors.push("En opción múltiple agrega al menos dos opciones; para una sola respuesta usa Respuestas con puntos.");
+    }
     if (question.mode === "choice" && question.answers.filter(function (answer) {
       return answer.points > 0;
     }).length !== 1) {

@@ -56,7 +56,7 @@ async function run() {
     mode: "choice",
     answers: [{ text: "A", points: 0 }]
   });
-  assert.equal(invalidChoice.errors.length, 1);
+  assert.equal(invalidChoice.errors.length, 2);
 
   queueResponse([{
     id: "q1",
